@@ -66,6 +66,24 @@ class FontsConfigSerialization(TypedDict):
 	fonts: list[str]
 
 
+class Plymouth(StrEnum):
+	DISABLED = 'Disabled'
+	BGRT = 'bgrt'
+	FADE_IN = 'fade-in'
+	GLOW = 'glow'
+	SCRIPT = 'script'
+	SOLAR = 'solar'
+	SPINNER = 'spinner'
+	SPINFINITY = 'spinfinity'
+	TRIBAR = 'tribar'
+	TEXT = 'text'
+	DETAILS = 'details'
+
+
+class PlymouthConfigSerialization(TypedDict):
+	plymouth: str
+
+
 class ZramAlgorithm(StrEnum):
 	ZSTD = auto()
 	LZO_RLE = 'lzo-rle'
@@ -81,6 +99,7 @@ class ApplicationSerialization(TypedDict):
 	print_service_config: NotRequired[PrintServiceConfigSerialization]
 	firewall_config: NotRequired[FirewallConfigSerialization]
 	fonts_config: NotRequired[FontsConfigSerialization]
+	plymouth_config: NotRequired[PlymouthConfigSerialization]
 
 
 @dataclass
@@ -167,6 +186,22 @@ class FontsConfiguration:
 		return cls(fonts=[FontPackage(f) for f in arg['fonts']])
 
 
+@dataclass
+class PlymouthConfiguration:
+	plymouth: Plymouth
+
+	def json(self) -> PlymouthConfigSerialization:
+		return {
+			'plymouth': self.plymouth.value,
+		}
+
+	@classmethod
+	def parse_arg(cls, arg: PlymouthConfigSerialization) -> Self:
+		return cls(
+			Plymouth(arg['plymouth']),
+		)
+
+
 @dataclass(frozen=True)
 class ZramConfiguration:
 	enabled: bool
@@ -190,6 +225,7 @@ class ApplicationConfiguration:
 	print_service_config: PrintServiceConfiguration | None = None
 	firewall_config: FirewallConfiguration | None = None
 	fonts_config: FontsConfiguration | None = None
+	plymouth_config: PlymouthConfiguration | None = None
 
 	@classmethod
 	def parse_arg(
@@ -221,6 +257,9 @@ class ApplicationConfiguration:
 		if args and (fonts_config := args.get('fonts_config')) is not None:
 			app_config.fonts_config = FontsConfiguration.parse_arg(fonts_config)
 
+		if args and (plymouth_config := args.get('plymouth_config')) is not None:
+			app_config.plymouth_config = PlymouthConfiguration.parse_arg(plymouth_config)
+
 		return app_config
 
 	def json(self) -> ApplicationSerialization:
@@ -243,5 +282,8 @@ class ApplicationConfiguration:
 
 		if self.fonts_config:
 			config['fonts_config'] = self.fonts_config.json()
+
+		if self.plymouth_config:
+			config['plymouth_config'] = self.plymouth_config.json()
 
 		return config

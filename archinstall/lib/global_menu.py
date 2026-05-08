@@ -264,7 +264,7 @@ class GlobalMenu(AbstractMenu[None]):
 		return f'{tr("Language")}: {lang.display_name}'
 
 	async def _select_applications(self, preset: ApplicationConfiguration | None) -> ApplicationConfiguration | None:
-		app_config = await ApplicationMenu(preset).show()
+		app_config = await ApplicationMenu(preset, self._advanced).show()
 		return app_config
 
 	async def _select_authentication(self, preset: AuthenticationConfiguration | None) -> AuthenticationConfiguration | None:
